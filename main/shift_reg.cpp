@@ -1,5 +1,6 @@
 #include "shift_reg.h"
 #include "avrio.h"
+#include "pins.h"
 
 uint8_t read_shift_reg() {
   char shift_reg = 0;
@@ -10,7 +11,7 @@ uint8_t read_shift_reg() {
 
   for(uint8_t i = 0; i < 8; i++) {
     pulse(SHIFT_CLK_PIN);
-    shift_reg |= read(Q7) << i;
+    shift_reg |= read(SHIFT_Q_PIN) << i;
   }
 
   return shift_reg;

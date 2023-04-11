@@ -2,6 +2,7 @@
 #include "adc.h"
 #include "type_k_array.h"
 #include "mux.h"
+#include <Arduino.h>
 
 float get_thermocouple_temp() {
   float thermocouple_voltage = get_voltage(THERMOCOUPLE_CH);

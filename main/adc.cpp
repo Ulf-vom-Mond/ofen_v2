@@ -1,6 +1,8 @@
 #include <SPI.h>
 #include "adc.h"
 #include "mux.h"
+#include "avrio.h"
+#include "pins.h"
 
 
 void adc_config() {
@@ -14,17 +16,15 @@ void adc_config() {
   digitalWrite(ADC_CS_PIN, HIGH);
 }
 
-void print_binary(char number, char newline) {
+void print_binary(char number) {
   for(int8_t i = 7; i >= 0; i--) {
     Serial.print((number >> i) & 1);
   }
-  if(newline) {
-    Serial.println();
-  }
 }
 
-void print_binary(char number) {
-  print_binary(number, 1);
+void print_line_binary(char number) {
+  print_binary(number);
+  Serial.println();
 }
 
 void read_all(char device_address) { // reads all register contents from ADC

@@ -2,8 +2,9 @@
 #include "adc.h"
 #include "pins.h"
 #include "avrio.h"
+#include <Arduino.h>
 
-void select_mux_channel(uint8_t channel, uint16_t wait_ms) {
+void select_mux_channel_delay(uint8_t channel, uint16_t wait_ms) {
   if(channel > 7) { // CD4097 only has 8 Channels
     return;
   }
@@ -17,5 +18,5 @@ void select_mux_channel(uint8_t channel, uint16_t wait_ms) {
 }
 
 void select_mux_channel(uint8_t channel) {
-  select_mux_channel(channel, 100);
+  select_mux_channel_delay(channel, 100);
 }

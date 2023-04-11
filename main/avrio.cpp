@@ -1,3 +1,4 @@
+#include <avr/io.h>
 #include "avrio.h"
 
 
@@ -94,7 +95,7 @@ void set_ddr(uint8_t pin, char data_direction) {
   volatile uint8_t *ddr = get_ddr_address(pin);
   uint8_t pin_mod = pin % 10;
 
-  if(value) {value = 0xFF;}
+  if(data_direction) {data_direction = 0xFF;}
 
   *ddr = data_direction & (*ddr | 0x01 << pin_mod) | ~data_direction & (*ddr & ~(0x01 << pin_mod));
 }
@@ -112,10 +113,10 @@ void write(uint8_t pin, char value) {
 }
 
 void toggle(uint8_t pin) {
-  volatile uint8_t *pin = get_pin_address(pin);
+  volatile uint8_t *pin_reg = (volatile uint8_t*)get_pin_address(pin);
   uint8_t pin_mod = pin % 10;
 
-  *port |= 0x01 << pin_mod
+  *pin_reg |= 0x01 << pin_mod;
 }
 
 void pulse(uint8_t pin) {
@@ -127,8 +128,8 @@ void pulse(uint8_t pin) {
 // READING from pins
 
 char read(uint8_t pin) {
-  volatile uint8_t *pin = get_pin_address(pin);
+  volatile uint8_t *pin_reg = get_pin_address(pin);
   uint8_t pin_mod = pin % 10;
 
-  return (*pin & (0x01 << pin_mod)) >> pin_mod;
+  return (*pin_reg & (0x01 << pin_mod)) >> pin_mod;
 }

@@ -1,5 +1,6 @@
 #include "pins.h"
 #include "avrio.h"
+#include "avr/io.h"
 
 void pin_config() {
   DDRB = 0b11101111;
