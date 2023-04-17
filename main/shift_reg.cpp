@@ -6,14 +6,10 @@
 uint8_t read_shift_reg() {
   char shift_reg = 0;
   write(SHIFT_LOAD_PIN, 0);
-  //pulse(SHIFT_CLK_PIN);
-  write(SHIFT_CLK_PIN, 1);
-  write(SHIFT_CLK_PIN, 0);
+  pulse(SHIFT_CLK_PIN);
   write(SHIFT_LOAD_PIN, 1);
   for(uint8_t i = 0; i < 8; i++) {
-    //pulse(SHIFT_CLK_PIN);
-    write(SHIFT_CLK_PIN, 1);
-    write(SHIFT_CLK_PIN, 0);    
+    pulse(SHIFT_CLK_PIN);  
     shift_reg |= read(SHIFT_Q_PIN) << i;
   }
 

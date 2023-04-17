@@ -113,10 +113,10 @@ void write(uint8_t pin, char value) {
 }
 
 void toggle(uint8_t pin) {
-  volatile uint8_t *pin_reg = (volatile uint8_t*)get_pin_address(pin);
+  volatile uint8_t *port = get_port_address(pin);
   uint8_t pin_mod = pin % 10;
 
-  *pin_reg |= 0x01 << pin_mod;
+  *port ^= 0x01 << pin_mod;
 }
 
 void pulse(uint8_t pin) {

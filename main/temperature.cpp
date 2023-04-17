@@ -4,6 +4,8 @@
 #include "mux.h"
 #include <Arduino.h>
 
+
+
 float get_thermocouple_temp() {
   float thermocouple_voltage = get_voltage(THERMOCOUPLE_CH);
   
