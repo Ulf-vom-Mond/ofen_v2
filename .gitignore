@@ -1,0 +1,11 @@
+/*
+
+!/.gitignore
+
+!/electronics
+/electronics/*
+!/electronics/*.kicad*
+!/electronics/ofen_v2.pretty
+
+!/main
+
