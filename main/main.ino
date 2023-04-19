@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include "temperature.h"
 #include "keypad.h"
-#include "graphics.h"
+#include "display.h"
 #include "pins.h"
 #include "avrio.h"
 #include "adc.h"
