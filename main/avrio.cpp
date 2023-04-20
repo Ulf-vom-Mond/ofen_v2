@@ -55,6 +55,8 @@ volatile uint8_t* get_port_address(uint8_t pin) { // convert unique integer port
     case 3:
       return &PORTD;
   }
+
+  return 0;
 }
 
 volatile uint8_t* get_pin_address(uint8_t pin) { // convert unique integer port id to port address
@@ -72,6 +74,8 @@ volatile uint8_t* get_pin_address(uint8_t pin) { // convert unique integer port 
     case 3:
       return &PIND;
   }
+
+  return 0;
 }
 
 volatile uint8_t* get_ddr_address(uint8_t pin) { // convert unique integer port id to port address
@@ -89,6 +93,8 @@ volatile uint8_t* get_ddr_address(uint8_t pin) { // convert unique integer port 
     case 3:
       return &DDRD;
   }
+
+  return 0;
 }
 
 void set_ddr(uint8_t pin, char data_direction) {
@@ -97,7 +103,7 @@ void set_ddr(uint8_t pin, char data_direction) {
 
   if(data_direction) {data_direction = 0xFF;}
 
-  *ddr = data_direction & (*ddr | 0x01 << pin_mod) | ~data_direction & (*ddr & ~(0x01 << pin_mod));
+  *ddr = (data_direction & (*ddr | (0x01 << pin_mod))) | (~data_direction & (*ddr & ~(0x01 << pin_mod)));
 }
 
 
@@ -109,7 +115,7 @@ void write(uint8_t pin, char value) {
 
   if(value) {value = 0xFF;}
 
-  *port = value & (*port | 0x01 << pin_mod) | ~value & (*port & ~(0x01 << pin_mod));
+  *port = (value & (*port | (0x01 << pin_mod))) | (~value & (*port & ~(0x01 << pin_mod)));
 }
 
 void toggle(uint8_t pin) {

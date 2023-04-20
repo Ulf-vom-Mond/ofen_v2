@@ -53,7 +53,7 @@ int16_t convert() {
   char val_lsb = SPI.transfer(0x00);
   write(ADC_CS_PIN, HIGH);
 
-  return val_msb << 8 | val_lsb & 0x00FF;
+  return (val_msb << 8) | (val_lsb & 0x00FF);
 }
 
 float get_voltage(uint8_t channel) {
