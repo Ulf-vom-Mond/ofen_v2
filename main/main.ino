@@ -1,16 +1,17 @@
 #include <SPI.h>
 #include "temperature.h"
 #include "keypad.h"
-#include "display.h"
+#include "user_interface.h"
 #include "pins.h"
 #include "avrio.h"
 #include "adc.h"
 #include "list.h"
 #include "keypad.h"
 
-void key_event_listener(uint16_t keys) {
-  Serial.println(map_key(keys));
-}
+
+// void key_event_listener(uint16_t keys) {
+//   Serial.println((keys), BIN);
+// }
 
 void setup() {
   pin_config();
@@ -22,7 +23,7 @@ void setup() {
 
   Serial.println("Hello!");
 
-  add_event_listener((void* (*)(uint16_t))&key_event_listener);
+  //add_event_listener((void* (*)(uint16_t))&key_event_listener);
 
   // TCNT1 = 206;
   // TCCR1A =0x00;
@@ -30,7 +31,7 @@ void setup() {
 	// TIMSK1 |= (1<<TOIE1);		// enable timer overflow interrupt
 	// sei();
 
-  draw_interface();
+  launch_ui();
 }
 
 

@@ -3,9 +3,8 @@
 #include "avrio.h"
 #include "pins.h"
 #include <stdlib.h>
-#include <Arduino.h>
 
-struct list *event_listener_list = new_list(); // this list contains all the callback functions which shall be called on a keystroke
+struct list<struct event_listener_conf> *event_listener_list = new_list<struct event_listener_conf>(); // this list contains all the callback functions which shall be called on a keystroke
 
 struct key key_map[16] = {
   {1,     '*'},
@@ -54,8 +53,8 @@ void select_keypad_column(uint8_t column) {
   write(DEMUX_A1_PIN, (column >> 1) & 0x01);
 }
 
-void add_event_listener(event_listener *new_event_listener) {
-  add_last(event_listener_list, (void *)new_event_listener);
+void add_event_listener(event_listener *new_event_listener, uint16_t mask, void *params) {
+  add_last<struct event_listener_conf>(event_listener_list, {new_event_listener, mask, params});
 }
 
 void read_keypad() {
@@ -77,10 +76,12 @@ void read_keypad() {
 
   if(pressed_keys == 0) {return;}
 
-  struct list *current_event_listener = event_listener_list;
-  while(current_event_listener->next){
-    (**((event_listener*)current_event_listener->data))(pressed_keys);
-    current_event_listener = current_event_listener->next;
+  struct list<struct event_listener_conf> *event_listener_iter = event_listener_list;
+  while(event_listener_iter->next){
+    if(keys & event_listener_iter->data.mask) {
+      (**((event_listener*)event_listener_iter->data.callback))(keys, event_listener_iter->data.params);
+    }
+    event_listener_iter = event_listener_iter->next;
   }
 
   // time_of_last_read = millis();

@@ -5,3 +5,5 @@
 #define THERMISTOR_C -0.00000008836440272
 #define THERMISTOR_RS 3900.0 // series resistor of thermistor
 #define THERMISTOR_RM 180.0  // measurement resistor
+
+#define MAX_TEMP 1300

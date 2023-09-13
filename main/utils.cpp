@@ -7,3 +7,4 @@ uint8_t count_decimals(int16_t num) {
     return count_decimals(num / 10) + 1;
   }
 }
+

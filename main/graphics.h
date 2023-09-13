@@ -56,16 +56,6 @@ typedef struct {
 } position;
 
 typedef struct {
-  position pos;
-  uint16_t width;
-  uint16_t height;
-  uint8_t rows;
-  uint8_t columns;
-  float *hlines; // y position of horizontal lines. relative to height if <= 1
-  float *vlines; // x position of vertical lines. relative to width if <= 1
-} table;
-
-typedef struct {
   uint8_t r;
   uint8_t g;
   uint8_t b;
