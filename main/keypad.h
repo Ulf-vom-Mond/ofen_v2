@@ -49,7 +49,6 @@ struct event_listener_conf {
 extern struct list<struct event_listener_conf> *event_listener_list;
 
 char map_key(uint16_t key_code);
-uint8_t char_to_int(char character);
 uint8_t get_keypad_state();
 void select_keypad_column(uint8_t column);
 void add_event_listener(event_listener *new_event_listener, uint16_t mask, uint8_t event_types, void *params);

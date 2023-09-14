@@ -38,12 +38,6 @@ char map_key(uint16_t key_code) { // maps the keycode to a character using the k
   }
 }
 
-uint8_t char_to_int(char character) { // ascii character to digit conversion
-  if(character < 48) {return 10;}
-  if(character > 57) {return 10;}
-  return character & 0x0F;
-}
-
 uint8_t get_keypad_state() { // gives a bit pattern representing the key states of the currently selecet keypad column. 1 means held down, 0 means not pressed
   uint8_t shift_reg = read_shift_reg();
   return shift_reg & 0b00001111;
