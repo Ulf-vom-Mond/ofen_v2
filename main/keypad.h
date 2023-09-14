@@ -2,6 +2,12 @@
 
 #include "list.h"
 
+#define LONG_PRESS_MS 200
+#define MULTI_CLICK_MS 50
+#define CLICK 1
+#define LONG_PRESS 2
+#define MULTI_CLICK 4
+
 struct key{
   uint16_t key_code;
   char key;
@@ -36,6 +42,7 @@ typedef void *event_listener(uint16_t keys, void *params); // type definition fo
 struct event_listener_conf {
   event_listener *callback;
   uint16_t mask;
+  uint8_t event_types;
   void *params;
 };
 
@@ -45,5 +52,5 @@ char map_key(uint16_t key_code);
 uint8_t char_to_int(char character);
 uint8_t get_keypad_state();
 void select_keypad_column(uint8_t column);
-void add_event_listener(event_listener *new_event_listener, uint16_t mask, void *params);
+void add_event_listener(event_listener *new_event_listener, uint16_t mask, uint8_t event_types, void *params);
 void read_keypad();

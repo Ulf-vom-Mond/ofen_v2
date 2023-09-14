@@ -3,6 +3,7 @@
 #include "avrio.h"
 #include "pins.h"
 #include <stdlib.h>
+#include <Arduino.h>
 
 struct list<struct event_listener_conf> *event_listener_list = new_list<struct event_listener_conf>(); // this list contains all the callback functions which shall be called on a keystroke
 
@@ -25,11 +26,11 @@ struct key key_map[16] = {
   {32768, 'A'}
 };
 
-uint16_t old_keys = 0;
-// uint16_t pressed_keys = 0;
-// uint16_t released_keys = 0;
 
-// uint32_t time_of_last_read = 0;
+uint16_t multi_click_keys = 0;
+uint16_t key_times[16] = {0};
+unsigned long last_update = 0;
+
 
 char map_key(uint16_t key_code) {
   for(uint8_t i = 0; i < 16; i++) {
@@ -53,8 +54,8 @@ void select_keypad_column(uint8_t column) {
   write(DEMUX_A1_PIN, (column >> 1) & 0x01);
 }
 
-void add_event_listener(event_listener *new_event_listener, uint16_t mask, void *params) {
-  add_last<struct event_listener_conf>(event_listener_list, {new_event_listener, mask, params});
+void add_event_listener(event_listener *new_event_listener, uint16_t mask, uint8_t event_types, void *params) {
+  add_last<struct event_listener_conf>(event_listener_list, {new_event_listener, mask, event_types, params});
 }
 
 void read_keypad() {
@@ -66,23 +67,48 @@ void read_keypad() {
     keys |= keypad_state << (4 * column);
   }
 
-  uint16_t pressed_keys  = ~old_keys & keys; // all the keys that were not pressed on the last call but that are pressed now
-  // released_keys =  keys & ~new_keys; // all the keys that were pressed on the last call but that are not pressed now
-  // uint16_t clicked_keys =  // all the keys that were pressed only for a short amount auf time
-  // uint16_t held_keys // all the keys that are currently pressed
-  // uint16_t double_clicked_keys // all the keys that were pressed twice for a short time
+  unsigned long current_ms = millis();
+  unsigned long passed_ms = current_ms - last_update;
+  last_update = current_ms;
 
-  old_keys = keys;
+  uint16_t clicked_keys = 0;
+  uint16_t long_pressed_keys = 0;
 
-  if(pressed_keys == 0) {return;}
+  for(uint8_t i; i<16; i++) {
+    uint16_t key_bit_pattern = 0b1 << i;
+    if(keys & key_bit_pattern) {
+      key_times[i] += passed_ms;
+    } else {
+      if(key_times[i] < LONG_PRESS_MS && key_times[i] > 0) {
+        clicked_keys |= key_bit_pattern;
+      }
+      key_times[i] = 0;
+      multi_click_keys &= ~key_bit_pattern;
+    }
+    if(key_times[i] >= LONG_PRESS_MS && !(multi_click_keys & key_bit_pattern)) {
+      long_pressed_keys |= key_bit_pattern;
+      multi_click_keys |= key_bit_pattern;
+    }
+    if(key_times[i] >= LONG_PRESS_MS + MULTI_CLICK_MS) {
+      key_times[i] -= MULTI_CLICK_MS;
+      clicked_keys |= key_bit_pattern;
+    }
+  }
+
+  if(!long_pressed_keys && !clicked_keys) return;
 
   struct list<struct event_listener_conf> *event_listener_iter = event_listener_list;
   while(event_listener_iter->next){
-    if(keys & event_listener_iter->data.mask) {
-      (**((event_listener*)event_listener_iter->data.callback))(keys, event_listener_iter->data.params);
+    struct event_listener_conf listener = event_listener_iter->data;
+
+    uint16_t registered_keys = listener.mask & (
+      (listener.event_types & CLICK ? clicked_keys & ~multi_click_keys : 0) | 
+      (listener.event_types & LONG_PRESS ? long_pressed_keys : 0) |
+      ((listener.event_types & MULTI_CLICK) ? clicked_keys & multi_click_keys : 0));
+
+    if(registered_keys) {
+      (**((event_listener*)listener.callback))(registered_keys, listener.params);
     }
     event_listener_iter = event_listener_iter->next;
   }
-
-  // time_of_last_read = millis();
 }
