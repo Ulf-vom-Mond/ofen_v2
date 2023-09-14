@@ -46,26 +46,13 @@ void draw_temp_graph() {
   draw_pattern_line(20, 50, 100, 130, SHORTDASH);
 }
 
-
-
 void draw_temp_table(table *temp_table) {  
   draw_table(temp_table);
   write_string_to_field(temp_table, 0, 0, "Time");
   write_string_to_field(temp_table, 1, 0, "Temp");
-  // for (uint16_t i = 1; i<temp_table->rows - 1; i++) {
-  //   char time_str[6]="";
-  //   sprintf(time_str, "12:%d", i);
-  //   char temp_str[6]="";
-  //   sprintf(temp_str, "%d", 118*i);
-  //   write_string_to_field(temp_table, 0, i, time_str);
-  //   change_field_color(temp_table, 1, i, temperature_to_color(118*i));
-  //   write_string_to_field(temp_table, 1, i, temp_str);
-  // }
 }
-
 
 void draw_interface() {
   init_display();
   draw_temp_graph();
 }
-

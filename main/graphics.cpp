@@ -15,11 +15,6 @@ rgb_color temperature_to_color(uint16_t temp) { // gives a green-yellow-red grad
   } else {
     r = 255 * (uint32_t)temp / (TEMP_MAX - (uint32_t)temp);
   }
-  // if(temp * 2 > TEMP_MAX) {
-  //   b = ((uint32_t)temp - TEMP_MAX / 2) * 40 / TEMP_MAX;
-  // } else {
-  //   b = (TEMP_MAX / 2 - (uint32_t)temp) * 40 / TEMP_MAX;
-  // }
   return {r, g, b};
 }
 
