@@ -2,6 +2,7 @@
 #include <LCDWIKI_SPI.h> //Hardware-specific library
 #include <SPI.h>
 #include "graphics.h"
+#include "temperature.h"
 
 LCDWIKI_SPI display(MODEL,CS,CD,RST,LED);
 
@@ -10,10 +11,10 @@ rgb_color temperature_to_color(uint16_t temp) { // gives a green-yellow-red grad
   uint8_t g = 255;
   uint8_t b = 30;
 
-  if(temp * 2 > TEMP_MAX){
-    g = 255 * (TEMP_MAX - (uint32_t)temp) / (uint32_t)temp;
+  if(temp * 2 > MAX_TEMP){
+    g = 255 * (MAX_TEMP - (uint32_t)temp) / (uint32_t)temp;
   } else {
-    r = 255 * (uint32_t)temp / (TEMP_MAX - (uint32_t)temp);
+    r = 255 * (uint32_t)temp / (MAX_TEMP - (uint32_t)temp);
   }
   return {r, g, b};
 }

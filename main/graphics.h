@@ -40,7 +40,9 @@
 #define MAGENTA 0xF81F
 #define ORANGE  0xF870
 
-#define TEMP_MAX 1300
+#define BACKGROUND_COLOR 0xFFFF
+#define LINE_COLOR 0x0000
+#define HIGHLIGHT_COLOR 0x00FF
 
 #define DOTS      0b01010101
 #define DASHS     0b00001111
@@ -60,17 +62,6 @@ typedef struct {
   uint8_t g;
   uint8_t b;
 } rgb_color;
-
-typedef struct {
-  position pos;
-  uint16_t width;
-  uint16_t height;
-  float x_min;
-  float x_max;
-  float y_min;
-  float y_max;
-  uint8_t padding;
-} graph;
 
 rgb_color temperature_to_color(uint16_t temp);
 void draw_arrow(position head, uint8_t direction, uint16_t length, uint16_t width);

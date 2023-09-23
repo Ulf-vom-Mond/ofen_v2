@@ -52,6 +52,8 @@ void add_y_mark(graph graph, uint16_t y) {
   uint8_t text_size = graph.padding / 8;
   uint16_t text_offset = 6 * (count_decimals(y) / 2) * text_size - 2;
 
+  display.Set_Text_Size(text_size);
+
   // x and y are switched because of the rotation
   display.Set_Rotation((original_rotation - 1) % 4);
   display.Draw_Fast_VLine(mark_pos.y, mark_pos.x - 2, 5);
@@ -63,6 +65,8 @@ void add_x_mark(graph graph, uint16_t x) {
   position mark_pos = point_to_position(graph, x, 0);
   uint8_t text_size = graph.padding / 8;
   uint16_t text_offset = 6 * (count_decimals(x) / 2) * text_size - 2;
+
+  display.Set_Text_Size(text_size);
 
   display.Draw_Fast_VLine(mark_pos.x, mark_pos.y - 2, 5);
   display.Print_Number_Int(x, mark_pos.x - text_offset, mark_pos.y + 2, 1, ' ', 10);

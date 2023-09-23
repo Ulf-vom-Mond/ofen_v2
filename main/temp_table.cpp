@@ -1,40 +1,54 @@
 #include "temp_table.h"
 #include <stdio.h>
 #include "utils.h"
+#include "temperature.h"
+#include "setpoint.h"
+#include "temp_graph.h"
 
-uint16_t time_str_to_min(char time_str[6]) {
-  return char_to_int(time_str[0]) * 600 + char_to_int(time_str[1]) * 60 + char_to_int(time_str[3]) * 10 + char_to_int(time_str[4]);
+void set_temp(struct temp_table *temp_table, uint8_t row, uint16_t new_temp) {
+  if(new_temp > MAX_TEMP) return; // save new temp only if it is smaller than 1300°C
+
+  struct list<setpoint> *old_setpoint_list = temp_table->setpoint_list;
+  get_index(temp_table->setpoint_list, row)->data.temp = new_temp;
+  update_temp_curve(old_setpoint_list, temp_table->setpoint_list);
 }
 
-void min_to_time_str(uint16_t minutes, char *dest) {
-  sprintf(dest, "%02d:%02d", minutes/60, minutes%60);
+uint16_t get_temp(struct temp_table *temp_table, uint8_t row) {
+  return get_index(temp_table->setpoint_list, row)->data.temp;
 }
 
-// add a new setpoint in a way to keep the setpoint list sorted by time. When there are multiple setpoints with the same timestamp, the offset value determines the position of the new setpoint
-uint8_t add_setpoint(struct list<setpoint> *setpoint_list, uint16_t time, uint16_t temp, uint8_t offset) {
-  struct list<setpoint> *setpoint_iter = setpoint_list;
-  uint8_t i = 1;
-  while(setpoint_iter->next && time_str_to_min(setpoint_iter->next->data.time) < time + (offset > i)) { // iterate and check where to put the setpoint
-    setpoint_iter = setpoint_iter->next;
-    i++;
+void set_time(struct temp_table *temp_table, uint8_t row, char *new_time_str) {
+  if(!row) return;
+
+  char *time_str = get_index(temp_table->setpoint_list, row)->data.time;
+  if(is_valid_time_str(time_str)) strcpy(temp_table->pre_edit, time_str);
+
+  if(is_valid_time_str(new_time_str)) { // only sort setpoint_list if the new time string is valid
+    setpoint *edit_setpoint = &get_index(temp_table->setpoint_list, row)->data;
+
+    uint16_t prev_time = time_str_to_min(get_index(temp_table->setpoint_list, row - 1)->data.time);
+    uint16_t curr_time = time_str_to_min(new_time_str);
+    uint16_t next_time = time_str_to_min(get_index(temp_table->setpoint_list, row + 1)->data.time);    
+    
+    if(curr_time < prev_time || curr_time > next_time) { // checks whether the list has to be sorted again, i.e. if the new time value is higher/lower than the time value of adjacent rows
+      uint16_t temp = edit_setpoint->temp; // save temperature value
+      
+      remove_setpoint(temp_table->setpoint_list, row); // remove setpoint and add it again so it is inserted in the correct position (sorted in a pre-sorted list)
+      uint8_t new_row = add_setpoint(temp_table->setpoint_list, time_str_to_min(new_time_str), temp, row); // add setpoint as close as possible to its original position if it has the same timestamp as another setpoint
+
+      fill_table_section(temp_table, min(row, new_row), max(row, new_row)); // redraw the part of the table between the old and the new position of the setpoint
+
+      temp_table->selected_field = new_row * 2; // select the field where the setpoint is now
+    } else { // otherwise, just add the new time string in place
+      strcpy(edit_setpoint->time, new_time_str);
+    }
+  } else {
+    strcpy(time_str, new_time_str);
   }
-  add_next<setpoint>(setpoint_iter, (setpoint){"", temp});
-  min_to_time_str(time, setpoint_iter->next->data.time);
-  return i; // return the final position of the new setpoint
 }
 
-// add setpoint at latest possible position
-uint8_t add_setpoint(struct list<setpoint> *setpoint_list, uint16_t time, uint16_t temp) {
-  add_setpoint(setpoint_list, time, temp, -1);
-}
-
-// remove setpoint at given index and return the head of the new list. this is neccessary if the first setpoint should be removed
-list<setpoint>* remove_setpoint(struct list<setpoint> *setpoint_list, uint8_t index) {
-  if(!index) {
-    return remove_first(setpoint_list);
-  }
-  remove_next(get_index(setpoint_list, index - 1));
-  return setpoint_list;
+char *get_time(struct temp_table *temp_table, uint8_t row) {
+  return get_index(temp_table->setpoint_list, row)->data.time;
 }
 
 void fill_field(struct temp_table *temp_table, uint8_t column, uint8_t row) { // fill a field with its value and color
@@ -60,28 +74,40 @@ void clear_row(struct temp_table *temp_table, uint8_t row) { // fill both fields
   change_field_color(&temp_table->temp_table, 1, row, {200, 200, 200});
 }
 
-// fill all the fields with their value and background color
-void fill_table(struct temp_table *temp_table) {
-  struct list<setpoint> *setpoint_iter = temp_table->setpoint_list;
-  uint8_t i = 0;
+void fill_table_section(struct temp_table *temp_table, uint8_t start_row, uint8_t end_row) {
+  struct list<setpoint> *setpoint_iter = get_index(temp_table->setpoint_list, start_row);
+  uint8_t i = start_row;
   while(setpoint_iter->next) { // fill fields which get a value
     fill_row(temp_table, i);
     i++;
     setpoint_iter = setpoint_iter->next;
   }
-  for(; i<temp_table->temp_table.rows - 1; i++) { // fill empty fields
-    clear_row(temp_table, i + 1);
+  i++;
+  for(; i<temp_table->temp_table.rows && i <= end_row; i++) { // fill empty fields
+    clear_row(temp_table, i);
   }
+}
+
+// fill all the fields with their value and background color
+void fill_table(struct temp_table *temp_table) {
+  fill_table_section(temp_table, 0, temp_table->temp_table.rows - 1);
+}
+
+uint8_t is_valid_time_str(char *time_str) {
+  for(uint8_t i = 0; time_str[i] != '\0'; i++) { // iterate over time string and check for spaces
+    if(time_str[i] == ' ') {
+      return 0;
+    }
+  }
+  return 1;
 }
 
 // makes a time string valid again by replacing it with the saved previous value of the time field if the current time field is incomplete, i.e. containing spaces
 // also returns if the time string was valid or had to be changed
 uint8_t validate_time_str(char *time_str, char *replacement) {
-  for(uint8_t i = 0; time_str[i] != '\0'; i++) { // iterate over time string and check for spaces
-    if(time_str[i] == ' ') {
-      strcpy(time_str, replacement); // replace time string with previous value
-      return 1;
-    }
+  if(!is_valid_time_str(time_str)) {
+    strcpy(time_str, replacement); // replace time string with previous value
+    return 0;
   }
-  return 0;
+  return 1;
 }

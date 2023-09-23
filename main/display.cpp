@@ -54,5 +54,5 @@ void draw_temp_table(table *temp_table) {
 
 void draw_interface() {
   init_display();
-  draw_temp_graph();
+  //draw_temp_graph();
 }
