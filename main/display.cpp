@@ -17,7 +17,8 @@ void init_display() {
 }
 
 void draw_temp_graph() {
-  graph temperature_graph = {{GRAPH_X, GRAPH_Y}, GRAPH_WIDTH, GRAPH_HEIGHT, 0, 12, 0, 1300, 10};
+  graph *temperature_graph;
+  *temperature_graph = {{GRAPH_X, GRAPH_Y}, GRAPH_WIDTH, GRAPH_HEIGHT, 0, 12, 0, 1300, 10};
   draw_graph(temperature_graph);
   
   add_y_mark(temperature_graph, 0);

@@ -18,7 +18,9 @@ void launch_ui() {
   struct list<setpoint> *setpoint_list = new_list<setpoint>();
   struct temp_table *temp_table = (struct temp_table *)malloc(sizeof(struct temp_table));
   table *table = create_table(TABLE_X, TABLE_Y, TABLE_WIDTH, TABLE_HEIGHT, 13, 2);
-  *temp_table = (struct temp_table){.temp_table = *table, .selected_field = 0, .pre_edit = "00:00", .setpoint_list = setpoint_list};
+  graph *temperature_graph = (graph*)malloc(sizeof(graph));
+  *temperature_graph = {{GRAPH_X, GRAPH_Y}, GRAPH_WIDTH, GRAPH_HEIGHT, 0, 400, 0, 1300, 10};
+  *temp_table = (struct temp_table){.temp_table = *table, .selected_field = 0, .pre_edit = "00:00", .setpoint_list = setpoint_list, .temp_graph = temperature_graph};
   temp_table->temp_table.hlines = rows;
   temp_table->temp_table.vlines = cols;
   
@@ -47,7 +49,10 @@ void launch_ui() {
   highlight_field(&temp_table->temp_table, 0, 1);
 
   display.Set_Draw_color(0, 0, 0);
-  graph temperature_graph = {{GRAPH_X, GRAPH_Y}, GRAPH_WIDTH, GRAPH_HEIGHT, 0, 400, 0, 1300, 10};
+  
   draw_graph(temperature_graph);
   draw_temp_curve(temperature_graph, setpoint_list);
+
+  
+  //draw_temp_curve(temperature_graph, setpoint_list);
 }

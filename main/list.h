@@ -66,8 +66,9 @@ struct list<T> *get_next(struct list<T> *list) {
 template<typename T>
 struct list<T> *get_index(struct list<T> *list, uint16_t index) {
   struct list<T> *list_iter = list;
-  for(uint16_t i = 0; list_iter->next && i < index; i++) {
+  for(uint16_t i = 0; i < index; i++) {
     list_iter = list_iter->next;
+    if(!list_iter) return nullptr;
   }
   return list_iter;
 }

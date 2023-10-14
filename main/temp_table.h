@@ -1,3 +1,4 @@
+#include "graph.h"
 #pragma once
 
 #include <stdint.h>
@@ -11,6 +12,7 @@ struct temp_table {
   uint8_t selected_field;
   char *pre_edit;
   struct list<setpoint> *setpoint_list;
+  graph *temp_graph;
 };
 
 void set_temp(struct temp_table *temp_table, uint8_t row, uint16_t new_temp);
