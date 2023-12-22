@@ -1,9 +1,7 @@
-//#include <cstdint>
-//#include <cstdint>
 #include "HardwareSerial.h"
 #include <avr/pgmspace.h>
-//#include <cstring>
 #include "key_event_handlers.h"
+#include "user_input.h"
 #include "keypad.h"
 #include "utils.h"
 #include "temperature.h"

@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 uint8_t read_shift_reg() {
-  char shift_reg = 0;
+  uint8_t shift_reg = 0;
   write(SHIFT_LOAD_PIN, 0);
   pulse(SHIFT_CLK_PIN);
   write(SHIFT_LOAD_PIN, 1);

@@ -4,6 +4,7 @@
 #include "display.h"
 #include "list.h"
 #include "keypad.h"
+#include "user_input.h"
 #include "table.h"
 #include "key_event_handlers.h"
 #include "temp_graph.h"
@@ -13,14 +14,13 @@
 float cols[] = {-1, 0.55};
 float rows[] = {-1, 21, 42, 63, 84, 105, 126, 147, 168, 189, 210, 231, 252};
 
-
 void launch_ui() {
   struct list<setpoint> *setpoint_list = new_list<setpoint>();
   struct temp_table *temp_table = (struct temp_table *)malloc(sizeof(struct temp_table));
-  table *table = create_table(TABLE_X, TABLE_Y, TABLE_WIDTH, TABLE_HEIGHT, 13, 2);
+  table *temp_table_table = create_table(TABLE_X, TABLE_Y, TABLE_WIDTH, TABLE_HEIGHT, 13, 2);
   graph *temperature_graph = (graph*)malloc(sizeof(graph));
   *temperature_graph = {{GRAPH_X, GRAPH_Y}, GRAPH_WIDTH, GRAPH_HEIGHT, 0, 400, 0, 1300, 10};
-  *temp_table = (struct temp_table){.temp_table = *table, .selected_field = 0, .pre_edit = "00:00", .setpoint_list = setpoint_list, .temp_graph = temperature_graph};
+  *temp_table = (struct temp_table){.temp_table = *temp_table_table, .selected_field = 0, .pre_edit = "00:00", .setpoint_list = setpoint_list, .temp_graph = temperature_graph};
   temp_table->temp_table.hlines = rows;
   temp_table->temp_table.vlines = cols;
   
@@ -53,6 +53,13 @@ void launch_ui() {
   draw_graph(temperature_graph);
   draw_temp_curve(temperature_graph, setpoint_list);
 
+
+  float status_rows[] = {0, 1};
+  float status_cols[] = {0, 0.3, 0.7, 1}; 
+  table *status_table = create_table(TOP_ROW_X, TOP_ROW_Y, TOP_ROW_WIDTH, TOP_ROW_HEIGHT, 2, 4);
+  status_table->hlines = status_rows;
+  status_table->vlines = status_cols;
+  draw_table(status_table);
   
-  //draw_temp_curve(temperature_graph, setpoint_list);
+  
 }

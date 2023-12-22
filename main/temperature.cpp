@@ -28,6 +28,7 @@ float get_thermocouple_temp() {
 float get_thermistor_temp() {
   float thermistor_voltage = get_voltage(THERMISTOR_CH);
   float thermistor_resistance_log = logf(U_REG * THERMISTOR_RM / thermistor_voltage - THERMISTOR_RM - THERMISTOR_RS);
+  Serial.println(U_REG * THERMISTOR_RM / thermistor_voltage - THERMISTOR_RM - THERMISTOR_RS, 5);
   return 1/(THERMISTOR_A + THERMISTOR_B * thermistor_resistance_log + THERMISTOR_C * pow(thermistor_resistance_log, 3)) - 273.15;
 }
 

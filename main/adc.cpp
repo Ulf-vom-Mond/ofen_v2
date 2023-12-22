@@ -6,14 +6,14 @@
 
 
 void adc_config() {
-  digitalWrite(ADC_CS_PIN, LOW);
+  write(ADC_CS_PIN, LOW);
   SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000110);
   SPI.transfer(0b11100000); //CONFIG0:  CLK_SEL
   SPI.transfer(0b00111100); //CONFIG1:  OSR
   SPI.transfer(0b10101011); //CONFIG2:  GAIN, AZ_MUX
   SPI.transfer(0b00000000); //CONFIG3:  Default
   SPI.transfer(0b00000110); //IRQ:      IRQ_MODE, EN_STP
-  digitalWrite(ADC_CS_PIN, HIGH);
+  write(ADC_CS_PIN, HIGH);
 }
 
 void print_binary(char number) {
@@ -75,6 +75,12 @@ float get_voltage(uint8_t channel) {
 
   select_mux_channel(channel);
   adc = convert();
+  Serial.print("max: ");
+  Serial.println(max);
+  Serial.print("min: ");
+  Serial.println(min);
+  Serial.print("adc: ");
+  Serial.println(adc);
 
   float slope = U_REF / (max - min);
   voltage = slope * (adc - min);

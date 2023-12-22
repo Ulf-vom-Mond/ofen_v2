@@ -31,7 +31,7 @@ void draw_table(table *table) {
       (table->vlines)[i] = (table->vlines)[i] * table->width;
     }
 
-    display.Draw_Fast_VLine(table->pos.x + (table->vlines)[i], table->pos.y, table->height);
+    display.Draw_Fast_VLine(table->pos.x + (table->vlines)[i], table->pos.y, table->height + 1);
   }
 
   for(uint16_t i = 0; i < table->rows; i++) {
@@ -44,13 +44,13 @@ void draw_table(table *table) {
       (table->hlines)[i] = (table->hlines)[i] * table->height;
     }
 
-    display.Draw_Fast_HLine(table->pos.x, table->pos.y + (table->hlines)[i], table->width);
+    display.Draw_Fast_HLine(table->pos.x, table->pos.y + (table->hlines)[i], table->width + 1);
   }
 }
 
 position get_table_entry_position(table *table, uint16_t column, uint16_t row) {
-  uint16_t x = column < table->columns ? table->pos.x + table->vlines[column] : table->pos.x + table->width;
-  uint16_t y = row < table->rows ? table->pos.y + table->hlines[row] : table->pos.y + table->height;
+  uint16_t x = column < table->columns ? table->pos.x + table->vlines[column] : table->pos.x + table->width + 1;
+  uint16_t y = row < table->rows ? table->pos.y + table->hlines[row] : table->pos.y + table->height + 1;
     
   return {x,y};
 }

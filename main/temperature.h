@@ -7,3 +7,7 @@
 #define THERMISTOR_RM 180.0  // measurement resistor
 
 #define MAX_TEMP 1300
+
+float get_thermocouple_temp();
+float get_thermistor_temp();
+float get_temp();

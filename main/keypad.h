@@ -37,19 +37,7 @@ enum key_codes {
   KEY_NUMBER = KEY_0|KEY_1|KEY_2|KEY_3|KEY_4|KEY_5|KEY_6|KEY_7|KEY_8|KEY_9
 };
 
-typedef void *event_listener(uint16_t keys, void *params); // type definition for the callback function. Callback functions get passed a list which contains all pressed keys
-
-struct event_listener_conf {
-  event_listener *callback;
-  uint16_t mask;
-  uint8_t event_types;
-  void *params;
-};
-
-extern struct list<struct event_listener_conf> *event_listener_list;
-
 char map_key(uint16_t key_code);
 uint8_t get_keypad_state();
 void select_keypad_column(uint8_t column);
-void add_event_listener(event_listener *new_event_listener, uint16_t mask, uint8_t event_types, void *params);
-void read_keypad();
+uint16_t read_keypad();
