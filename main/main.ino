@@ -15,16 +15,24 @@
 // }
 
 void tmr_evnt_lstnr1(void *params) {
-  // Serial.println(get_thermistor_temp());
-  // Serial.println(get_voltage(0), 5);
-  select_mux_channel(0);
-  Serial.println(convert());
-  select_mux_channel(1);
-  Serial.println(convert());
-  select_mux_channel(3);
-  Serial.println(convert());
+  // Serial.println(get_voltage(THERMISTOR_CH), 5);
+  Serial.print("Thermistor: ");
+  Serial.print(get_thermistor_temp());
+  Serial.println(" C");
+  Serial.print("Thermocouple: ");
+  Serial.print(get_thermocouple_temp());
+  Serial.println(" C");
+  Serial.print("Temperature: ");
+  Serial.print(get_temp());
+  Serial.println(" C");
+  // select_mux_channel(REF_CH);
+  // Serial.println(convert());
+  // select_mux_channel(GND_CH);
+  // Serial.println(convert());
+  // select_mux_channel(THERMISTOR_CH);
+  // Serial.println(convert());
   //delay(5000);
-  Serial.println();
+  // Serial.println();
   //get_thermistor_temp();
 }
 
@@ -45,7 +53,7 @@ void setup() {
   sei();
 
   add_timer_event_listener(tmr_evnt_lstnr1, 5, 0);
-  //add_timer_event_listener(tmr_evnt_lstnr5, 5, 0);
+  // add_timer_event_listener(tmr_evnt_lstnr5, 5, 0);
 
   // add_event_listener((void* (*)(uint16_t))&key_event_listener);
 
@@ -61,7 +69,23 @@ void setup() {
 void loop() {
   emit_key_events();
   emit_timer_events();
-  //Serial.println(get_voltage(0));
+  // Serial.println(get_voltage(0));
   // Serial.println(get_voltage(0), 5);
-  delay(10);
+  // Serial.println("GND_CH");
+  // select_mux_channel_delay(GND_CH, 0);
+  // for(uint8_t i = 0; i<30; i++) {
+  //   Serial.println(convert());
+  //   //delay(13);
+  // }
+  // Serial.println("REF_CH");
+  // select_mux_channel_delay(REF_CH, 0);
+  // for(uint8_t i = 0; i<30; i++) {
+  //   Serial.println(convert());
+  //   //delay(13);
+  // }
+  // delay(10);
+  // select_mux_channel(REF_CH);
+  // delay(5000);
+  // select_mux_channel(THERMISTOR_CH);
+  // delay(5000);
 }

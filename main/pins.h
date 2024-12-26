@@ -32,7 +32,7 @@ void pin_config();
 
 // MCP3461 ADC:
 #define ADC_CS_PIN      21 // PC1
-#define ADC_CD_DDR      OUT
+#define ADC_CS_DDR      OUT
 #define ADC_IRQ_PIN     33 // PD3
 #define ADC_IRQ_DDR     IN
 
