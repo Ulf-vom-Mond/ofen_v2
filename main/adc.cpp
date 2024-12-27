@@ -4,6 +4,42 @@
 #include "avrio.h"
 #include "pins.h"
 
+#include <avr/io.h>            
+#include <avr/interrupt.h>
+
+void (*async_callback)(uint16_t);
+
+void enable_int1() {
+  EIMSK |= 0b00000010;
+}
+
+void disable_int1() {
+  EIMSK &= 0b11111101;
+}
+
+void interrupt_config() {
+  EICRA = 0b00001000; // configure external interrupt 1 as falling edge trigger
+  enable_int1(); // enable external interrupt 1 on pin PD3  
+}
+
+ISR(INT1_vect) {
+  // Serial.println("ISR called");
+  write(ADC_CS_PIN, LOW);
+  uint8_t status = SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001);
+  
+  if(status & 0b00000100) {
+    write(ADC_CS_PIN, HIGH);
+    Serial.println(status, BIN);
+    return;
+  }
+  // write(ADC_CS_PIN, LOW);
+  // SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001);
+  char val_msb = SPI.transfer(0x00);
+  char val_lsb = SPI.transfer(0x00);
+  write(ADC_CS_PIN, HIGH);
+  async_callback((val_msb << 8) | (val_lsb & 0x00FF));
+  // return (val_msb << 8) | (val_lsb & 0x00FF);
+}
 
 void adc_config() {
   write(ADC_CS_PIN, LOW);
@@ -15,6 +51,7 @@ void adc_config() {
   SPI.transfer(0b00000000); //CONFIG3:  Default
   SPI.transfer(0b00000110); //IRQ:      IRQ_MODE, EN_STP
   write(ADC_CS_PIN, HIGH);
+  interrupt_config();
 }
 
 void print_binary(char number) {
@@ -64,38 +101,51 @@ int16_t convert() {
   return (val_msb << 8) | (val_lsb & 0x00FF);
 }
 
+void convert_async(void callback(uint16_t)) {
+  // Serial.println("A");
+  write(ADC_CS_PIN, LOW);
+  SPI.transfer(DEVICE_ADDRESS << 6 | 0b00101000);
+  write(ADC_CS_PIN, HIGH);
+  // Serial.println("B");
+  async_callback = callback;
+  //return;
+  // Serial.println("C");
+  return;
+  while(read(ADC_IRQ_PIN) == 0x01) ;
+  if(SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001) & 0b00000100) {
+    Serial.println("return");
+    return;
+  }
+  write(ADC_CS_PIN, LOW);
+  SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001);
+  char val_msb = SPI.transfer(0x00);
+  char val_lsb = SPI.transfer(0x00);
+  write(ADC_CS_PIN, HIGH);
+  Serial.println("D");
+  async_callback((val_msb << 8) | (val_lsb & 0x00FF));
+  //Serial.println(&callback, HEX);
+  //Serial.println(&async_callback, HEX);
+  Serial.println("E");
+}
+
+float adc_to_voltage(uint16_t adc, uint16_t zero, uint16_t ref) {
+  float slope = U_REF / (ref - zero);
+  float voltage = slope * (adc - zero);
+
+  return voltage;
+}
+
 float get_voltage(uint8_t channel) {
   if(channel > 7) { // CD4097 only has 8 Channels
     return 0;
   }
 
-  int32_t min = 0;
-  int32_t max = 32767;
-  int32_t adc = 0;
-
-  float voltage = 0;
-
   select_mux_channel(GND_CH);
-  // select_mux_channel(REF_CH);
-  min = convert();
-  // min = -346;
+  int32_t min = convert();
   select_mux_channel(REF_CH);
-  // select_mux_channel(GND_CH);
-  max = convert();
-  // max = 32767;
-  // select_mux_channel(channel);
-  select_mux_channel(channel); // 2, 3, 6, 7 cause problems
-  adc = convert();
-  // adc = 1016;
-  // Serial.print("min: ");
-  // Serial.println(min);
-  // Serial.print("max: ");
-  // Serial.println(max);
-  // Serial.print("adc: ");
-  // Serial.println(adc);
+  int32_t max = convert();
+  select_mux_channel(channel);
+  int32_t adc = convert();
 
-  float slope = U_REF / (max - min);
-  voltage = slope * (adc - min);
-
-  return voltage;
+  return adc_to_voltage(adc, min, max);
 }

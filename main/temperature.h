@@ -8,6 +8,8 @@
 
 #define MAX_TEMP 1300
 
+float thermocouple_voltage_to_temp(float thermocouple_voltage);
 float get_thermocouple_temp();
+float thermistor_voltage_to_temp(float thermistor_voltage);
 float get_thermistor_temp();
 float get_temp();

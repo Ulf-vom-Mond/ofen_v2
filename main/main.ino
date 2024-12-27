@@ -10,21 +10,42 @@
 #include "timer.h"
 #include "mux.h"
 
+#define BUF_LEN 10
+#define MUX_MAX_CH 3
+
 // void key_event_listener(uint16_t keys) {
 //   Serial.println((keys), BIN);
 // }
 
+char data_ready = 1;
+uint8_t mux_state = 0;
+uint8_t buf_state = 0;
+
+uint16_t adc_buf[8][BUF_LEN] = {0};
+
+void adc_callback(uint16_t data) {
+  data_ready = 1;
+  adc_buf[mux_state][buf_state] = data;
+  mux_state++;
+  if(mux_state > MUX_MAX_CH) {
+    mux_state = 0;
+    buf_state++;
+    if(buf_state > BUF_LEN) buf_state = 0;
+  }
+  // Serial.println("adc called back!");
+}
+
 void tmr_evnt_lstnr1(void *params) {
   // Serial.println(get_voltage(THERMISTOR_CH), 5);
-  Serial.print("Thermistor: ");
-  Serial.print(get_thermistor_temp());
-  Serial.println(" C");
-  Serial.print("Thermocouple: ");
-  Serial.print(get_thermocouple_temp());
-  Serial.println(" C");
-  Serial.print("Temperature: ");
-  Serial.print(get_temp());
-  Serial.println(" C");
+  // Serial.print("Thermistor: ");
+  // Serial.print(get_thermistor_temp());
+  // Serial.println(" C");
+  // Serial.print("Thermocouple: ");
+  // Serial.print(get_thermocouple_temp());
+  // Serial.println(" C");
+  // Serial.print("Temperature: ");
+  // Serial.print(get_temp());
+  // Serial.println(" C");
   // select_mux_channel(REF_CH);
   // Serial.println(convert());
   // select_mux_channel(GND_CH);
@@ -34,6 +55,47 @@ void tmr_evnt_lstnr1(void *params) {
   //delay(5000);
   // Serial.println();
   //get_thermistor_temp();
+
+  uint16_t adc_buf_avg[8] = {0};
+  for(uint8_t j = 0; j<=MUX_MAX_CH; j++) {
+    Serial.print("Channel ");
+    Serial.print(j);
+    Serial.print(": ");
+    for(uint8_t i = 0; i<BUF_LEN; i++) {
+      adc_buf_avg[j] += adc_buf[j][i];
+      Serial.print(adc_buf[j][i]);
+      Serial.print(", ");
+    }
+    Serial.println();
+    adc_buf_avg[j] /= BUF_LEN;
+  }
+  Serial.print("Thermistor: ");
+  Serial.print(thermistor_voltage_to_temp(adc_to_voltage(adc_buf_avg[THERMISTOR_CH], adc_buf_avg[GND_CH], adc_buf_avg[REF_CH])));
+  Serial.println(" C");
+  Serial.print("Thermocouple: ");
+  Serial.print(thermocouple_voltage_to_temp(adc_to_voltage(adc_buf_avg[THERMOCOUPLE_CH], adc_buf_avg[GND_CH], adc_buf_avg[REF_CH])));
+  Serial.println(" C");
+  Serial.println();
+
+
+  return;
+  data_ready = 0;
+  convert_async(adc_callback);
+  // adc_callback(convert());
+  Serial.println("trigger conversion");
+
+  // write(ADC_CS_PIN, LOW);
+  // Serial.println(SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001), BIN);
+  // write(ADC_CS_PIN, HIGH);
+  
+
+  // write(ADC_IRQ_PIN, 0);
+  // delay(1);
+  // write(ADC_IRQ_PIN, 1);
+  // data_ready = 1;
+  // Serial.print("Temperature: ");
+  // Serial.print(get_temp());
+  // Serial.println(" C");
 }
 
 void tmr_evnt_lstnr5(void *params) {
@@ -44,6 +106,7 @@ void setup() {
   pin_config();
 
   Serial.begin(115200);
+  delay(10);
   Serial.println("Hello!");
   write(ADC_CS_PIN, HIGH);
   SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
@@ -69,6 +132,15 @@ void setup() {
 void loop() {
   emit_key_events();
   emit_timer_events();
+  if(data_ready) {
+    select_mux_channel(mux_state);
+    data_ready = 0;
+    convert_async(adc_callback);
+    // adc_callback(convert());
+    // Serial.println("trigger conversion");
+  }
+  // if(read(ADC_IRQ_PIN) == 0) Serial.println("IRQ Pin Low");
+  // delay(1000);
   // Serial.println(get_voltage(0));
   // Serial.println(get_voltage(0), 5);
   // Serial.println("GND_CH");
