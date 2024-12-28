@@ -49,7 +49,7 @@ void adc_callback(int16_t data) {
   if(mux_state > MUX_MAX_CH) {
     mux_state = 0;
     buf_state++;
-    if(buf_state > BUF_LEN) buf_state = 0;
+    if(buf_state >= BUF_LEN) buf_state = 0;
   }
   // Serial.println("adc called back!");
 }
@@ -89,9 +89,25 @@ void tmr_evnt_lstnr1(void *params) {
     adc_buf_avg[j] /= BUF_LEN;
     // Serial.println(adc_buf_avg[j]);
   }
-  Serial.print("Thermistor: ");
   // Serial.print(adc_to_voltage(adc_buf_avg[THERMISTOR_CH], adc_buf_avg[GND_CH], adc_buf_avg[REF_CH]), 5);
-  Serial.print(thermistor_voltage_to_temp(adc_to_voltage(adc_buf_avg[THERMISTOR_CH], adc_buf_avg[GND_CH], adc_buf_avg[REF_CH])));
+  float temp = thermistor_voltage_to_temp(adc_to_voltage(adc_buf_avg[THERMISTOR_CH], adc_buf_avg[GND_CH], adc_buf_avg[REF_CH]));
+  if(temp != temp) {
+    Serial.print("GND: ");
+    Serial.println(adc_buf_avg[GND_CH]);
+    // Serial.print(", REF: ");
+    // Serial.print(adc_buf_avg[REF_CH]);
+    // Serial.print(", REF: ");
+    // Serial.print(adc_buf_avg[REF_CH]);
+    // Serial.print(", Thermistor: ");
+    // Serial.println(adc_buf_avg[THERMISTOR_CH]);
+    for(uint8_t i = 0; i<BUF_LEN; i++) {
+      Serial.print(adc_buf[GND_CH][i]);
+      Serial.print(", ");
+    }
+    Serial.println();
+  }
+  Serial.print("Thermistor: ");
+  Serial.print(temp);
   Serial.println(" C");
   Serial.print("Thermocouple: ");
   Serial.print(thermocouple_voltage_to_temp(adc_to_voltage(adc_buf_avg[THERMOCOUPLE_CH], adc_buf_avg[GND_CH], adc_buf_avg[REF_CH])));
