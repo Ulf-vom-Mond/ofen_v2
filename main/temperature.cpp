@@ -7,17 +7,17 @@
 float thermocouple_voltage_to_temp(float thermocouple_voltage) {
   for(int16_t i = 1; i < sizeof(voltages) / sizeof(uint16_t); i++){
     uint16_t voltages_i = pgm_read_word_near(&voltages[i]);
-        
-    if(voltages_i < thermocouple_voltage * 1000000.0 + 6458.0){ // convert voltage to mikrovolts and add the voltage offset
+    float uvolt = thermocouple_voltage * 1000000.0 + 6458.0; // convert voltage to mikrovolts and add the voltage offset
+    if(voltages_i < uvolt){
       continue;
     }
 
     float   inf_volt = pgm_read_word_near(&voltages[i - 1]); // inferior voltage
     float   sup_volt = voltages_i; // superior voltage
-    int16_t inf_temp = i - 270 - TEMP_STEP; // inferior temperature
-    int16_t sup_temp = i - 270; // superior temperature
+    int16_t inf_temp = (i-1)*TEMP_STEP - 270; // inferior temperature
+    int16_t sup_temp = i*TEMP_STEP - 270; // superior temperature
 
-    return (thermocouple_voltage * 1000000.0 + 6458.0 - inf_volt) / (sup_volt - inf_volt) + inf_temp;
+    return (uvolt - inf_volt) / (sup_volt - inf_volt) * TEMP_STEP + inf_temp;
   }
   return sizeof(voltages) / sizeof(uint16_t) * TEMP_STEP;
 }
