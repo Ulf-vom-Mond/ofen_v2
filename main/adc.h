@@ -14,4 +14,4 @@ void read_all(char device_address);
 int16_t convert();
 void convert_async(void callback(uint16_t));
 float get_voltage(uint8_t channel);
-float adc_to_voltage(uint16_t adc, uint16_t zero, uint16_t ref);
+float adc_to_voltage(int16_t adc, int16_t zero, int16_t ref);

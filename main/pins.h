@@ -41,7 +41,7 @@ void pin_config();
 #define MUX_A_DDR       OUT
 #define MUX_B_PIN       23 // PC3
 #define MUX_B_DDR       OUT
-#define MUX_C_PIN       21 // PC1
+#define MUX_C_PIN       22 // PC1
 #define MUX_C_DDR       OUT
 
 // CD4017 Demultiplexer:

@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include "avrio.h"
 
+#include <Arduino.h>
 
 // HELPER functions
 
@@ -109,13 +110,17 @@ void set_ddr(uint8_t pin, char data_direction) {
 
 // WRITING to pins
 
-void write(uint8_t pin, char value) {
+void write(uint8_t pin, uint8_t value) {
   volatile uint8_t *port = get_port_address(pin);
   uint8_t pin_mod = pin % 10;
 
   if(value) {value = 0xFF;}
 
   *port = (value & (*port | (0x01 << pin_mod))) | (~value & (*port & ~(0x01 << pin_mod)));
+  // if(pin == 22) {
+  //   Serial.print("Attention! Write to MUX_C_PIN: ");
+  //   Serial.println(value, BIN);
+  // }
 }
 
 void toggle(uint8_t pin) {

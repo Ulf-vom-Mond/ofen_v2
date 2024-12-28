@@ -19,29 +19,38 @@ void disable_int1() {
 
 void interrupt_config() {
   EICRA = 0b00001000; // configure external interrupt 1 as falling edge trigger
-  enable_int1(); // enable external interrupt 1 on pin PD3  
+  // enable_int1(); // enable external interrupt 1 on pin PD3  
 }
 
 ISR(INT1_vect) {
   // Serial.println("ISR called");
+  disable_int1();
   write(ADC_CS_PIN, LOW);
   uint8_t status = SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001);
+  write(ADC_CS_PIN, HIGH);
   
   if(status & 0b00000100) {
     write(ADC_CS_PIN, HIGH);
     Serial.println(status, BIN);
     return;
   }
-  // write(ADC_CS_PIN, LOW);
-  // SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001);
+  write(ADC_CS_PIN, LOW);
+  SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001);
   char val_msb = SPI.transfer(0x00);
   char val_lsb = SPI.transfer(0x00);
   write(ADC_CS_PIN, HIGH);
+  // Serial.print("ch: ");
+  // Serial.print(get_mux_channel());
+  // Serial.print(", val:");
+  // Serial.println((val_msb << 8) | (val_lsb & 0x00FF));
   async_callback((val_msb << 8) | (val_lsb & 0x00FF));
   // return (val_msb << 8) | (val_lsb & 0x00FF);
 }
 
 void adc_config() {
+  write(ADC_CS_PIN, LOW);
+  SPI.transfer(DEVICE_ADDRESS << 6 | 0b00111000); // device full reset
+  write(ADC_CS_PIN, HIGH);
   write(ADC_CS_PIN, LOW);
   SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000110);
   SPI.transfer(0b11100000); //CONFIG0:  CLK_SEL
@@ -103,6 +112,7 @@ int16_t convert() {
 
 void convert_async(void callback(uint16_t)) {
   // Serial.println("A");
+  enable_int1();
   write(ADC_CS_PIN, LOW);
   SPI.transfer(DEVICE_ADDRESS << 6 | 0b00101000);
   write(ADC_CS_PIN, HIGH);
@@ -128,9 +138,9 @@ void convert_async(void callback(uint16_t)) {
   Serial.println("E");
 }
 
-float adc_to_voltage(uint16_t adc, uint16_t zero, uint16_t ref) {
-  float slope = U_REF / (ref - zero);
-  float voltage = slope * (adc - zero);
+float adc_to_voltage(int16_t adc, int16_t zero, int16_t ref) {
+  float slope = U_REF / ((float)ref - (float)zero);
+  float voltage = slope * ((float)adc - (float)zero);
 
   return voltage;
 }
@@ -141,11 +151,11 @@ float get_voltage(uint8_t channel) {
   }
 
   select_mux_channel(GND_CH);
-  int32_t min = convert();
+  int16_t min = convert();
   select_mux_channel(REF_CH);
-  int32_t max = convert();
+  int16_t max = convert();
   select_mux_channel(channel);
-  int32_t adc = convert();
+  int16_t adc = convert();
 
   return adc_to_voltage(adc, min, max);
 }

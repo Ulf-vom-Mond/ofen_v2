@@ -21,11 +21,30 @@ char data_ready = 1;
 uint8_t mux_state = 0;
 uint8_t buf_state = 0;
 
-uint16_t adc_buf[8][BUF_LEN] = {0};
+int16_t adc_buf[8][BUF_LEN] = {0};
 
-void adc_callback(uint16_t data) {
+#ifdef __arm__
+// should use uinstd.h to define sbrk but Due causes a conflict
+extern "C" char* sbrk(int incr);
+#else  // __ARM__
+extern char *__brkval;
+#endif  // __arm__
+
+int freeMemory() {
+  char top;
+#ifdef __arm__
+  return &top - reinterpret_cast<char*>(sbrk(0));
+#elif defined(CORE_TEENSY) || (ARDUINO > 103 && ARDUINO != 151)
+  return &top - __brkval;
+#else  // __arm__
+  return __brkval ? &top - __brkval : &top - __malloc_heap_start;
+#endif  // __arm__
+}
+
+void adc_callback(int16_t data) {
   data_ready = 1;
   adc_buf[mux_state][buf_state] = data;
+  // Serial.println(adc_buf[mux_state][buf_state]);
   mux_state++;
   if(mux_state > MUX_MAX_CH) {
     mux_state = 0;
@@ -56,20 +75,22 @@ void tmr_evnt_lstnr1(void *params) {
   // Serial.println();
   //get_thermistor_temp();
 
-  uint16_t adc_buf_avg[8] = {0};
+  int32_t adc_buf_avg[8] = {0};
   for(uint8_t j = 0; j<=MUX_MAX_CH; j++) {
-    Serial.print("Channel ");
-    Serial.print(j);
-    Serial.print(": ");
+    // Serial.print("Channel ");
+    // Serial.print(j);
+    // Serial.print(": ");
     for(uint8_t i = 0; i<BUF_LEN; i++) {
       adc_buf_avg[j] += adc_buf[j][i];
-      Serial.print(adc_buf[j][i]);
-      Serial.print(", ");
+      // Serial.print(adc_buf[j][i]);
+      // Serial.print(", ");
     }
-    Serial.println();
+    // Serial.println();
     adc_buf_avg[j] /= BUF_LEN;
+    // Serial.println(adc_buf_avg[j]);
   }
   Serial.print("Thermistor: ");
+  // Serial.print(adc_to_voltage(adc_buf_avg[THERMISTOR_CH], adc_buf_avg[GND_CH], adc_buf_avg[REF_CH]), 5);
   Serial.print(thermistor_voltage_to_temp(adc_to_voltage(adc_buf_avg[THERMISTOR_CH], adc_buf_avg[GND_CH], adc_buf_avg[REF_CH])));
   Serial.println(" C");
   Serial.print("Thermocouple: ");
@@ -115,7 +136,7 @@ void setup() {
   timer_config();
   sei();
 
-  add_timer_event_listener(tmr_evnt_lstnr1, 5, 0);
+  add_timer_event_listener(tmr_evnt_lstnr1, 1, 0);
   // add_timer_event_listener(tmr_evnt_lstnr5, 5, 0);
 
   // add_event_listener((void* (*)(uint16_t))&key_event_listener);
@@ -127,6 +148,16 @@ void setup() {
 	// sei();
 
   launch_ui();
+  write(MUX_C_PIN, 0);
+  Serial.println(read(MUX_C_PIN), BIN);
+  write(MUX_C_PIN, 1);
+  Serial.println(read(MUX_C_PIN), BIN);
+  write(MUX_C_PIN, 0);
+  Serial.println(read(MUX_C_PIN), BIN);
+  write(MUX_C_PIN, 1);
+  Serial.println(read(MUX_C_PIN), BIN);
+  write(MUX_C_PIN, 0);
+  Serial.println(read(MUX_C_PIN), BIN);
 }
 
 void loop() {
@@ -134,6 +165,7 @@ void loop() {
   emit_timer_events();
   if(data_ready) {
     select_mux_channel(mux_state);
+    // select_mux_channel(THERMISTOR_CH);
     data_ready = 0;
     convert_async(adc_callback);
     // adc_callback(convert());
