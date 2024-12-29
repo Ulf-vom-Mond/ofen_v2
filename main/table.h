@@ -14,12 +14,15 @@ typedef struct {
   float *hlines; // y position of horizontal lines. relative to height if <= 1
   float *vlines; // x position of vertical lines. relative to width if <= 1
   rgb_color *field_colors;
+  char *text;
+  uint8_t max_text_len;
 } table;
 
-table *create_table(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t rows, uint16_t cols);
+table *create_table(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t rows, uint16_t cols, uint8_t max_text_len);
 void delete_table(table *my_table);
 void draw_table(table *table);
 position get_table_entry_position(table *table, uint16_t column, uint16_t row);
+void refresh_text(table *table, uint16_t column, uint16_t row, char *text);
 void write_string_to_field(table *table, uint16_t column, uint16_t row, char *text);
 void change_field_color(table *table, uint16_t column, uint16_t row, rgb_color color);
 void erase_field(table *table, uint16_t column, uint16_t row);

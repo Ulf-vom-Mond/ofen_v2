@@ -14,10 +14,19 @@
 float cols[] = {-1, 0.55};
 float rows[] = {-1, 21, 42, 63, 84, 105, 126, 147, 168, 189, 210, 231, 252};
 
+table *status_table;
+
+void update_status(float temp) {
+  char temp_str[8] = {0};
+  sprintf(temp_str, "%4d C", (int16_t)(temp+0.5));
+  // erase_field(status_table, 1, 0);
+  refresh_text(status_table, 1, 0, temp_str);
+}
+
 void launch_ui() {
   struct list<setpoint> *setpoint_list = new_list<setpoint>();
   struct temp_table *temp_table = (struct temp_table *)malloc(sizeof(struct temp_table));
-  table *temp_table_table = create_table(TABLE_X, TABLE_Y, TABLE_WIDTH, TABLE_HEIGHT, 13, 2);
+  table *temp_table_table = create_table(TABLE_X, TABLE_Y, TABLE_WIDTH, TABLE_HEIGHT, 13, 2, 5);
   graph *temperature_graph = (graph*)malloc(sizeof(graph));
   *temperature_graph = {{GRAPH_X, GRAPH_Y}, GRAPH_WIDTH, GRAPH_HEIGHT, 0, 400, 0, 1300, 10};
   *temp_table = (struct temp_table){.temp_table = *temp_table_table, .selected_field = 0, .pre_edit = "00:00", .setpoint_list = setpoint_list, .temp_graph = temperature_graph};
@@ -56,9 +65,10 @@ void launch_ui() {
 
   float status_rows[] = {0, 1};
   float status_cols[] = {0, 0.3, 0.7, 1}; 
-  table *status_table = create_table(TOP_ROW_X, TOP_ROW_Y, TOP_ROW_WIDTH, TOP_ROW_HEIGHT, 2, 4);
+  status_table = create_table(TOP_ROW_X, TOP_ROW_Y, TOP_ROW_WIDTH, TOP_ROW_HEIGHT, 2, 4, 7);
   status_table->hlines = status_rows;
   status_table->vlines = status_cols;
+  change_field_color(status_table, 1, 0, {200, 200, 200});
   draw_table(status_table);
   
   

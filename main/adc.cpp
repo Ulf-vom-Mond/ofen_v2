@@ -7,7 +7,7 @@
 #include <avr/io.h>            
 #include <avr/interrupt.h>
 
-void (*async_callback)(uint16_t);
+void (*async_callback)(uint16_t, uint8_t);
 
 void enable_int1() {
   EIMSK |= 0b00000010;
@@ -30,8 +30,12 @@ ISR(INT1_vect) {
   write(ADC_CS_PIN, HIGH);
   
   if(status & 0b00000100) {
-    write(ADC_CS_PIN, HIGH);
     Serial.println(status, BIN);
+    async_callback(0, 1);
+    // write(ADC_CS_PIN, LOW);
+    // status = SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001);
+    // write(ADC_CS_PIN, HIGH);
+    // Serial.println(status, BIN);
     return;
   }
   write(ADC_CS_PIN, LOW);
@@ -43,7 +47,7 @@ ISR(INT1_vect) {
   // Serial.print(get_mux_channel());
   // Serial.print(", val:");
   // Serial.println((val_msb << 8) | (val_lsb & 0x00FF));
-  async_callback((val_msb << 8) | (val_lsb & 0x00FF));
+  async_callback((val_msb << 8) | (val_lsb & 0x00FF), 0);
   // return (val_msb << 8) | (val_lsb & 0x00FF);
 }
 
@@ -110,7 +114,7 @@ int16_t convert() {
   return (val_msb << 8) | (val_lsb & 0x00FF);
 }
 
-void convert_async(void callback(uint16_t)) {
+void convert_async(void callback(uint16_t, uint8_t)) {
   // Serial.println("A");
   enable_int1();
   write(ADC_CS_PIN, LOW);
@@ -121,21 +125,21 @@ void convert_async(void callback(uint16_t)) {
   //return;
   // Serial.println("C");
   return;
-  while(read(ADC_IRQ_PIN) == 0x01) ;
-  if(SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001) & 0b00000100) {
-    Serial.println("return");
-    return;
-  }
-  write(ADC_CS_PIN, LOW);
-  SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001);
-  char val_msb = SPI.transfer(0x00);
-  char val_lsb = SPI.transfer(0x00);
-  write(ADC_CS_PIN, HIGH);
-  Serial.println("D");
-  async_callback((val_msb << 8) | (val_lsb & 0x00FF));
-  //Serial.println(&callback, HEX);
-  //Serial.println(&async_callback, HEX);
-  Serial.println("E");
+  // while(read(ADC_IRQ_PIN) == 0x01) ;
+  // if(SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001) & 0b00000100) {
+  //   Serial.println("return");
+  //   return;
+  // }
+  // write(ADC_CS_PIN, LOW);
+  // SPI.transfer(DEVICE_ADDRESS << 6 | 0b00000001);
+  // char val_msb = SPI.transfer(0x00);
+  // char val_lsb = SPI.transfer(0x00);
+  // write(ADC_CS_PIN, HIGH);
+  // Serial.println("D");
+  // async_callback((val_msb << 8) | (val_lsb & 0x00FF));
+  // //Serial.println(&callback, HEX);
+  // //Serial.println(&async_callback, HEX);
+  // Serial.println("E");
 }
 
 float adc_to_voltage(int16_t adc, int16_t zero, int16_t ref) {

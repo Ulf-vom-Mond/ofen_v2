@@ -12,6 +12,6 @@ void print_line_binary(char number);
 void print_binary(char number);
 void read_all(char device_address);
 int16_t convert();
-void convert_async(void callback(uint16_t));
+void convert_async(void callback(uint16_t, uint8_t));
 float get_voltage(uint8_t channel);
 float adc_to_voltage(int16_t adc, int16_t zero, int16_t ref);

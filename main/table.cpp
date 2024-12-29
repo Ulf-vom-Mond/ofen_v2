@@ -1,6 +1,24 @@
 #include "table.h"
 
-table *create_table(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t rows, uint16_t cols) {
+#ifdef __arm__
+// should use uinstd.h to define sbrk but Due causes a conflict
+extern "C" char* sbrk(int incr);
+#else  // __ARM__
+extern char *__brkval;
+#endif  // __arm__
+
+int freeMemory() {
+  char top;
+#ifdef __arm__
+  return &top - reinterpret_cast<char*>(sbrk(0));
+#elif defined(CORE_TEENSY) || (ARDUINO > 103 && ARDUINO != 151)
+  return &top - __brkval;
+#else  // __arm__
+  return __brkval ? &top - __brkval : &top - __malloc_heap_start;
+#endif  // __arm__
+}
+
+table *create_table(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t rows, uint16_t cols, uint8_t max_text_len) {
   table *new_table = (table *)malloc(sizeof(table));
   new_table->pos = {x, y};
   new_table->width = width;
@@ -10,6 +28,10 @@ table *create_table(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uin
   new_table->hlines = (float *)malloc(sizeof(float) * rows);
   new_table->vlines = (float *)malloc(sizeof(float) * cols);
   new_table->field_colors = (rgb_color *)malloc(sizeof(rgb_color) * rows * cols);
+  uint16_t text_size = rows * cols * (max_text_len + 1);
+  new_table->text = (char *)malloc(text_size);
+  memset(new_table->text, 0, text_size);
+  new_table->max_text_len = max_text_len;
   return new_table;
 }
 
@@ -53,6 +75,56 @@ position get_table_entry_position(table *table, uint16_t column, uint16_t row) {
   uint16_t y = row < table->rows ? table->pos.y + table->hlines[row] : table->pos.y + table->height + 1;
     
   return {x,y};
+}
+
+void refresh_text(table *table, uint16_t column, uint16_t row, char *str) {
+  //Serial.println("refresh text");
+  char* old_str = (char*)&((char[column][row][table->max_text_len+1])(table->text))[column][row];
+  char clear_str[table->max_text_len+1] = "";
+  char new_str[table->max_text_len+1] = "";
+
+  uint8_t str_len = strlen(str);
+  uint8_t old_len = strlen(old_str);
+
+  for(uint8_t i = 0; i <= table->max_text_len; i++) {
+    if(i >= str_len && i >= old_len) {
+      clear_str[i] = '\0';
+      new_str[i] = '\0';
+      break;
+    }
+    if(i >= str_len) {
+      clear_str[i] = old_str[i];
+      new_str[i] = '\0';
+      continue;
+    }
+    if(i >= old_len) {
+      clear_str[i] = '\0';
+      new_str[i] = str[i];
+      continue;
+    }
+    if(old_str[i] == str[i]) {
+      clear_str[i] = ' ';
+      new_str[i] = ' ';
+    } else {
+      clear_str[i] = old_str[i];
+      new_str[i] = str[i];
+    }
+  }
+
+  rgb_color color = table->field_colors[row * table->columns + column];
+  display.Set_Text_colour(display.Color_To_565(color.r, color.g, color.b));
+  write_string_to_field(table, column, row, clear_str);
+  //Serial.println("clear");
+  //Serial.println(&((char[column][row])(table->text))[column][row]);
+  //text = "AB";
+  // Serial.println(table->text);
+  // Serial.println((uint8_t)*table->text, HEX);
+  strcpy(old_str, str);
+
+  //Serial.println("copy");
+  display.Set_Text_colour(BLACK);
+  write_string_to_field(table, column, row, new_str);
+  //Serial.println("write");
 }
 
 void write_string_to_field(table *table, uint16_t column, uint16_t row, char *text) {

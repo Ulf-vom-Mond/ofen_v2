@@ -14,7 +14,7 @@
 
 #define MARGIN 4
 
-#define TOP_ROW_HEIGHT 48
+#define TOP_ROW_HEIGHT 32
 #define TOP_ROW_WIDTH  WIDTH - 2 * MARGIN
 #define TOP_ROW_X      MARGIN
 #define TOP_ROW_Y      MARGIN
